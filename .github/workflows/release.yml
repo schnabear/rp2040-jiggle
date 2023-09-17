@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yml
+
+  release:
+    name: Release
+    # permissions: write-all
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    needs: build
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: build-output
+        path: build/
+
+    - name: Create release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: false
+        release_name: ${{ github.ref }}
+        tag_name: ${{ github.ref }}
+        body: ''
+
+    - name: Upload BIN artifact
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/puffpuff.bin
+        asset_name: puffpuff.bin
+        asset_content_type: application/octet-stream
+
+    - name: Upload DIS artifact
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/puffpuff.dis
+        asset_name: puffpuff.dis
+        asset_content_type: text/plain
+
+    - name: Upload ELF artifact
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/puffpuff.elf
+        asset_name: puffpuff.elf
+        asset_content_type: application/x-executable
+
+    - name: Upload ELF MAP artifact
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/puffpuff.elf.map
+        asset_name: puffpuff.elf.map
+        asset_content_type: text/x-asm
+
+    - name: Upload HEX artifact
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/puffpuff.hex
+        asset_name: puffpuff.hex
+        asset_content_type: text/plain
+
+    - name: Upload UF2 artifact
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/puffpuff.uf2
+        asset_name: puffpuff.uf2
+        asset_content_type: application/octet-stream
